@@ -11,24 +11,38 @@ datasource db {
 }
 
 model User {
-  id       Int       @id @default(autoincrement())
-  email    String    @unique
-  name     String    @db.VarChar(255)
-  expenses Expense[]
+  userId     Int               @id @default(autoincrement())
+  email      String            @unique
+  name       String            @db.VarChar(255)
+  categories Category[]        @relation("categories_user")
+  expenses   ExpensesOnUsers[]
+  payers     Expense[]
 }
 
 model Expense {
-  id         Int      @id @default(autoincrement())
-  amount     String   @db.VarChar(255)
-  createdAt  DateTime @default(now())
-  user       User     @relation(fields: [userId], references: [id])
-  userId     Int
-  category   Category @relation(fields: [categoryId], references: [id])
+  expenseId  Int               @id @default(autoincrement())
+  amount     Int
+  createdAt  DateTime          @default(now())
+  category   Category          @relation("category_expenses", fields: [categoryId], references: [categoryId], onUpdate: Cascade, onDelete: Cascade)
   categoryId Int
+  users      ExpensesOnUsers[]
+  payer      User              @relation(fields: [paidBy], references: [userId], onUpdate: Cascade, onDelete: Cascade)
+  paidBy     Int
+}
+
+model ExpensesOnUsers {
+  expense   Expense @relation(fields: [expenseId], references: [expenseId], onUpdate: Cascade, onDelete: Cascade)
+  expenseId Int // relation scalar field (used in the `@relation` attribute above)
+  user      User    @relation(fields: [userId], references: [userId], onUpdate: Cascade, onDelete: Cascade)
+  userId    Int // relation scalar field (used in the `@relation` attribute above)
+
+  @@id([expenseId, userId])
 }
 
 model Category {
-  id       Int       @id @default(autoincrement())
-  name     String    @db.VarChar(255)
-  expenses Expense[]
+  categoryId Int       @id @default(autoincrement())
+  name       String    @db.VarChar(255)
+  expenses   Expense[] @relation("category_expenses")
+  userId     Int
+  user       User      @relation("categories_user", fields: [userId], references: [userId], onUpdate: Cascade, onDelete: Cascade)
 }
